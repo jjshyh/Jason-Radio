@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#39216b">
+  <meta name="description" content="제이슨 라디오 - 국내 라디오 인터넷 실시간 스트리밍">
+  <title>제이슨 라디오 · by Jason</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink:#211b35; --muted:#77728a; --purple:#5633a5; --purple2:#7956d8;
+      --pink:#f26b9b; --surface:#fff; --line:#eeeaf5; --bg:#f5f2fb;
+      --shadow:0 18px 50px rgba(50,31,91,.13);
+    }
+    * { box-sizing:border-box }
+    html { min-height:100%; background:var(--bg) }
+    body {
+      margin:0; min-height:100vh; padding:clamp(12px,3vw,28px);
+      display:flex; justify-content:center; align-items:center;
+      font-family:system-ui,-apple-system,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+      color:var(--ink); background:radial-gradient(circle at 10% 5%,#fce8f0 0,transparent 34%),
+      radial-gradient(circle at 95% 90%,#e9e2ff 0,transparent 35%),var(--bg);
+    }
+    button,select,input { font:inherit }
+    button { cursor:pointer; -webkit-tap-highlight-color:transparent }
+    .app {
+      width:min(100%,510px); min-height:min(850px,calc(100dvh - 32px));
+      padding:clamp(22px,5vw,34px); border:1px solid rgba(255,255,255,.9);
+      border-radius:30px; background:rgba(255,255,255,.92); box-shadow:var(--shadow);
+      display:flex; flex-direction:column; position:relative; overflow:hidden;
+    }
+    .topline { display:flex; align-items:center; justify-content:space-between; gap:10px }
+    .brand { display:flex; align-items:center; gap:9px; font-size:13px; font-weight:800; letter-spacing:.04em; color:var(--purple) }
+    .brand-mark { width:34px;height:34px;border-radius:12px;display:grid;place-items:center;color:#fff;
+      background:linear-gradient(135deg,var(--purple),var(--pink));font-size:17px }
+    .live { display:flex;align-items:center;gap:7px;padding:7px 11px;border-radius:30px;
+      background:#fff0f4;color:#d84370;font-size:11px;font-weight:900;letter-spacing:.08em }
+    .live-dot { width:7px;height:7px;border-radius:50%;background:#ed477b;box-shadow:0 0 0 4px #ffdce7 }
+    header { text-align:center; padding:30px 0 23px }
+    h1 { margin:0;font-size:clamp(25px,6vw,32px);letter-spacing:-.055em;line-height:1.2 }
+    .subtitle { margin:9px 0 0;color:var(--muted);font-size:13px }
+    .visualizer { height:48px;display:flex;align-items:center;justify-content:center;gap:5px;margin:18px auto 0 }
+    .visualizer i { display:block;width:5px;height:7px;border-radius:8px;background:linear-gradient(180deg,var(--pink),var(--purple2));opacity:.65 }
+    .visualizer.playing i { animation:wave .65s ease-in-out infinite alternate;opacity:1 }
+    .visualizer i:nth-child(2n){animation-delay:.15s}.visualizer i:nth-child(3n){animation-delay:.3s}
+    @keyframes wave { to { transform:scaleY(4.3) } }
+    .section-label { display:flex;justify-content:space-between;align-items:center;margin:5px 2px 9px;
+      color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase }
+    .station-select-wrap { position:relative }
+    select {
+      width:100%;height:58px;padding:0 48px 0 17px;border:1px solid var(--line);border-radius:17px;
+      background:#faf9fd;color:var(--ink);font-weight:750;font-size:15px;outline:none;appearance:none;
+    }
+    select:focus,input:focus { border-color:var(--purple2);box-shadow:0 0 0 3px #eee8ff }
+    .station-select-wrap:after { content:"⌄";position:absolute;right:18px;top:12px;font-size:24px;color:var(--purple);pointer-events:none }
+    .station-tools { display:flex;gap:8px;margin-top:9px }
+    .text-btn { border:0;background:transparent;color:var(--purple);font-size:12px;font-weight:800;padding:8px 5px }
+    .text-btn:last-child { margin-left:auto }
+    .now-card { margin:22px 0 17px;padding:15px 16px;border-radius:18px;background:linear-gradient(120deg,#f6f1ff,#fff3f7);
+      display:flex;align-items:center;gap:13px;min-width:0 }
+    .record { width:43px;height:43px;flex:0 0 43px;border-radius:50%;display:grid;place-items:center;
+      color:#fff;background:linear-gradient(145deg,#39216b,#a56be2);box-shadow:0 5px 12px #6543a633;font-size:19px }
+    .now-meta { min-width:0;flex:1 }
+    .now-label { color:var(--muted);font-size:10px;font-weight:850;letter-spacing:.1em }
+    .now-name { margin-top:3px;font-size:14px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
+    .status { margin-top:3px;font-size:11px;color:var(--muted) }
+    .controls { display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:10px }
+    .control {
+      min-height:53px;border:1px solid var(--line);border-radius:16px;background:#fff;color:var(--ink);
+      font-size:13px;font-weight:800;box-shadow:0 4px 12px rgba(42,28,73,.04);
+    }
+    .control.primary { color:white;border:0;background:linear-gradient(135deg,var(--purple),var(--purple2));box-shadow:0 8px 18px #6846b833 }
+    .control:active,.icon-btn:active { transform:scale(.97) }
+    .skip-row { display:flex;justify-content:center;gap:22px;margin-top:13px }
+    .skip { border:0;background:transparent;color:var(--muted);font-size:12px;font-weight:750;padding:8px }
+    .volume-box { margin-top:25px;padding:17px;border:1px solid var(--line);border-radius:18px }
+    .volume-head { display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;font-size:12px;font-weight:850 }
+    .volume-head span:last-child { color:var(--muted);font-variant-numeric:tabular-nums }
+    .volume-controls { display:flex;align-items:center;gap:12px }
+    .icon-btn { width:40px;height:40px;border:0;border-radius:13px;background:#f2edfb;color:var(--purple);font-size:17px }
+    input[type=range] { width:100%;accent-color:var(--purple);cursor:pointer }
+    .message { min-height:36px;margin:12px 2px 0;color:var(--muted);font-size:11px;line-height:1.55;text-align:center }
+    .footer { margin-top:auto;padding-top:20px;text-align:center;color:#aaa4b5;font-size:10px }
+    .install { display:none;width:100%;margin-top:16px;padding:13px;border:0;border-radius:14px;color:#fff;
+      background:#28213c;font-weight:800;font-size:13px }
+    .install.visible { display:block }
+    dialog { width:min( calc(100% - 28px),420px);border:0;border-radius:22px;padding:22px;box-shadow:0 20px 70px #1d123955 }
+    dialog::backdrop { background:#1e163b88;backdrop-filter:blur(3px) }
+    dialog h2 { margin:0 0 7px;font-size:19px }
+    dialog p { margin:0 0 17px;color:var(--muted);font-size:12px;line-height:1.6 }
+    .field { margin:12px 0 }
+    .field label { display:block;margin:0 0 6px;font-size:12px;font-weight:800 }
+    .field input { width:100%;height:46px;padding:0 12px;border:1px solid var(--line);border-radius:12px;outline:none;font-size:13px }
+    .dialog-actions { display:flex;gap:9px;margin-top:18px }
+    .dialog-actions button { flex:1;height:45px;border:0;border-radius:12px;font-size:13px;font-weight:850 }
+    .cancel { background:#f1eef6;color:var(--ink) }.save { background:var(--purple);color:#fff }
+    @media(max-height:760px) { body{align-items:flex-start}.app{min-height:0}header{padding:20px 0 15px}.now-card{margin:14px 0}.volume-box{margin-top:17px} }
+    @media(prefers-reduced-motion:reduce) { *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important} }
+  </style>
+</head>
+<body>
+<main class="app">
+  <div class="topline">
+    <div class="brand"><span class="brand-mark">♫</span> JASON'S RADIO</div>
+    <div class="live"><span class="live-dot"></span> INTERNET LIVE</div>
+  </div>
+
+  <header>
+    <h1>제이슨 라디오</h1>
+    <p class="subtitle">좋아하는 라디오와 함께하는 편안한 시간</p>
+    <div class="visualizer" id="visualizer" aria-hidden="true">
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    </div>
+  </header>
+
+  <section aria-label="라디오 채널">
+    <div class="section-label"><span>라디오 채널</span><span id="channelCount">10 CHANNELS</span></div>
+    <div class="station-select-wrap"><select id="stationSelect" aria-label="라디오 채널 선택"></select></div>
+    <div class="station-tools">
+      <button class="text-btn" id="addStation">＋ 나만의 채널 추가</button>
+      <button class="text-btn" id="removeStation" title="직접 추가한 채널만 삭제할 수 있습니다">선택 채널 삭제</button>
+    </div>
+  </section>
+
+  <section class="now-card" aria-live="polite">
+    <div class="record">♫</div>
+    <div class="now-meta">
+      <div class="now-label">NOW SELECTED</div>
+      <div class="now-name" id="nowName">SBS 러브FM (103.5)</div>
+      <div class="status" id="playStatus">재생 대기 중</div>
+    </div>
+  </section>
+
+  <div class="controls">
+    <button class="control" id="prevBtn" aria-label="이전 채널">⏮ 이전</button>
+    <button class="control primary" id="playBtn">▶ 재생</button>
+    <button class="control" id="stopBtn">■ 정지</button>
+  </div>
+  <div class="skip-row">
+    <button class="skip" id="nextBtn">다음 채널 ⏭</button>
+  </div>
+
+  <section class="volume-box" aria-label="음량 조절">
+    <div class="volume-head"><span>🔊 음량 조절</span><span id="volumeValue">50%</span></div>
+    <div class="volume-controls">
+      <button class="icon-btn" id="muteBtn" aria-label="음소거">🔊</button>
+      <input id="volume" type="range" min="0" max="100" value="50" aria-label="음량">
+    </div>
+  </section>
+
+  <p class="message" id="message" role="status">채널을 선택한 뒤 재생 버튼을 눌러주세요.</p>
+  <button class="install" id="installBtn">📱 홈 화면에 앱 설치</button>
+  <div class="footer">JASON RADIO · 개인용 인터넷 라디오 플레이어</div>
+</main>
+
+<dialog id="stationDialog">
+  <form id="stationForm">
+    <h2>나만의 채널 추가</h2>
+    <p>방송국에서 제공하는 인터넷 스트리밍 주소를 입력하세요. 주소는 https://로 시작해야 합니다.</p>
+    <div class="field"><label for="customName">채널 이름</label><input id="customName" maxlength="50" required placeholder="예: 지역 라디오"></div>
+    <div class="field"><label for="customUrl">스트리밍 주소(URL)</label><input id="customUrl" type="url" required placeholder="https://example.com/live.mp3"></div>
+    <div class="dialog-actions">
+      <button type="button" class="cancel" id="cancelDialog">취소</button>
+      <button type="submit" class="save">채널 저장</button>
+    </div>
+  </form>
+</dialog>
+
+<audio id="audio" preload="none" playsinline></audio>
+<script>
+(() => {
+  "use strict";
+  const DEFAULT_STATIONS = [
+    {name:"SBS 러브FM (103.5)",url:"https://radio.bsod.kr/stream/?stn=sbs&ch=lovefm"},
+    {name:"SBS 파워FM (107.7)",url:"https://radio.bsod.kr/stream/?stn=sbs&ch=powerfm"},
+    {name:"SBS 고릴라",url:"https://radio.bsod.kr/stream/?stn=sbs&ch=dmb"},
+    {name:"KBS 2라디오 · 해피FM (106.1)",url:"https://radio.bsod.kr/stream/?stn=kbs&ch=2radio"},
+    {name:"KBS 2FM · 쿨FM (89.1)",url:"https://radio.bsod.kr/stream/?stn=kbs&ch=2fm"},
+    {name:"MBC 표준FM (95.9)",url:"https://radio.bsod.kr/stream/?stn=mbc&ch=sfm"},
+    {name:"MBC FM4U (91.9)",url:"https://radio.bsod.kr/stream/?stn=mbc&ch=fm4u"},
+    {name:"MBC mini 올댓뮤직",url:"https://radio.bsod.kr/stream/?stn=mbc&ch=chm"},
+    {name:"CBS 음악FM (93.9)",url:"https://radio.bsod.kr/stream/?stn=cbs&ch=mfm"},
+    {name:"YTN 뉴스FM (94.5)",url:"https://radio.bsod.kr/stream/?stn=ytn"}
+  ];
+  const $ = id => document.getElementById(id);
+  const audio=$("audio"), select=$("stationSelect"), visualizer=$("visualizer");
+  const status=$("playStatus"), message=$("message"), playBtn=$("playBtn");
+  let stations=[...DEFAULT_STATIONS], currentIndex=0, isMuted=false, previousVolume=50, deferredInstall=null;
+
+  try {
+    const saved=JSON.parse(localStorage.getItem("jasonRadioCustomStations")||"[]");
+    if(Array.isArray(saved)) stations=stations.concat(saved.filter(s=>s && typeof s.name==="string" && typeof s.url==="string"));
+  } catch(e) { console.warn("저장된 채널을 불러오지 못했습니다.",e); }
+
+  function setMessage(text){ message.textContent=text; }
+  function setStatus(text){ status.textContent=text; }
+  function renderStations(){
+    select.innerHTML="";
+    stations.forEach((station,index)=>{
+      const option=document.createElement("option");
+      option.value=String(index); option.textContent=station.name; select.appendChild(option);
+    });
+    select.value=String(currentIndex);
+    $("channelCount").textContent=`${stations.length} CHANNELS`;
+    $("nowName").textContent=stations[currentIndex]?.name || "채널 없음";
+  }
+  function selectStation(index, autoplay=false){
+    if(!stations.length) return;
+    currentIndex=(index+stations.length)%stations.length;
+    audio.pause();
+    audio.src=stations[currentIndex].url;
+    audio.load();
+    renderStations();
+    visualizer.classList.remove("playing");
+    playBtn.textContent="▶ 재생";
+    setStatus("재생 대기 중");
+    setMessage("선택한 채널: "+stations[currentIndex].name);
+    if(autoplay) play();
+  }
+  async function play(){
+    if(!audio.src) selectStation(currentIndex,false);
+    setMessage("방송 연결을 시도하고 있습니다…");
+    try {
+      await audio.play();
+      playBtn.textContent="Ⅱ 일시정지";
+      setStatus("실시간 방송 재생 중");
+      setMessage("방송이 재생되고 있습니다.");
+    } catch(error) {
+      visualizer.classList.remove("playing");
+      playBtn.textContent="▶ 재생";
+      setStatus("재생할 수 없음");
+      setMessage("방송 연결에 실패했습니다. 잠시 후 다시 시도하거나 다른 채널을 선택해 주세요. (주소 만료·서버 제한·네트워크 문제일 수 있습니다.)");
+      console.warn("Audio playback failed:",error);
+    }
+  }
+  function pause(){
+    audio.pause();
+    visualizer.classList.remove("playing");
+    playBtn.textContent="▶ 재생";
+    setStatus("일시정지");
+    setMessage("방송을 일시정지했습니다.");
+  }
+  function stop(){
+    audio.pause();
+    try { audio.currentTime=0; } catch(e) {}
+    visualizer.classList.remove("playing");
+    playBtn.textContent="▶ 재생";
+    setStatus("정지됨");
+    setMessage("재생을 정지했습니다.");
+  }
+  function persistCustom(){
+    const custom=stations.slice(DEFAULT_STATIONS.length);
+    localStorage.setItem("jasonRadioCustomStations",JSON.stringify(custom));
+  }
+
+  select.addEventListener("change",()=>selectStation(Number(select.value),!audio.paused));
+  playBtn.addEventListener("click",()=>audio.paused ? play() : pause());
+  $("stopBtn").addEventListener("click",stop);
+  $("prevBtn").addEventListener("click",()=>selectStation(currentIndex-1,!audio.paused));
+  $("nextBtn").addEventListener("click",()=>selectStation(currentIndex+1,!audio.paused));
+
+  $("volume").addEventListener("input",e=>{
+    const value=Number(e.target.value);
+    audio.volume=value/100;
+    $("volumeValue").textContent=value+"%";
+    if(value>0 && audio.muted){audio.muted=false;isMuted=false;$("muteBtn").textContent="🔊";}
+    if(value===0){audio.muted=true;isMuted=true;$("muteBtn").textContent="🔇";}
+  });
+  audio.volume=.5;
+  $("muteBtn").addEventListener("click",()=>{
+    isMuted=!audio.muted;
+    audio.muted=isMuted;
+    $("muteBtn").textContent=isMuted?"🔇":"🔊";
+    setMessage(isMuted?"음소거했습니다.":"음소거를 해제했습니다.");
+  });
+
+  audio.addEventListener("playing",()=>{
+    visualizer.classList.add("playing"); playBtn.textContent="Ⅱ 일시정지";
+    setStatus("실시간 방송 재생 중"); setMessage("방송이 재생되고 있습니다.");
+  });
+  audio.addEventListener("waiting",()=>{visualizer.classList.remove("playing");setStatus("방송 수신 중…");});
+  audio.addEventListener("stalled",()=>{setStatus("방송 수신 지연");setMessage("네트워크 상태를 확인하고 있습니다.");});
+  audio.addEventListener("error",()=>{
+    visualizer.classList.remove("playing");playBtn.textContent="▶ 재생";
+    setStatus("연결 오류");setMessage("이 채널의 스트림에 연결하지 못했습니다. 다른 채널을 시도해 주세요.");
+  });
+  audio.addEventListener("pause",()=>visualizer.classList.remove("playing"));
+  window.addEventListener("online",()=>setMessage("인터넷 연결이 복구되었습니다. 재생 버튼을 눌러주세요."));
+  window.addEventListener("offline",()=>{setStatus("오프라인");setMessage("인터넷 연결을 확인해 주세요.");});
+
+  $("addStation").addEventListener("click",()=>$("stationDialog").showModal());
+  $("cancelDialog").addEventListener("click",()=>$("stationDialog").close());
+  $("stationForm").addEventListener("submit",event=>{
+    event.preventDefault();
+    const name=$("customName").value.trim(), rawUrl=$("customUrl").value.trim();
+    let parsed;
+    try { parsed=new URL(rawUrl); } catch(e) { setMessage("올바른 URL을 입력해 주세요."); return; }
+    if(parsed.protocol!=="https:"){setMessage("보안을 위해 https:// 주소만 추가할 수 있습니다.");return;}
+    if(!name){setMessage("채널 이름을 입력해 주세요.");return;}
+    stations.push({name,url:parsed.href});
+    currentIndex=stations.length-1;
+    try {persistCustom();} catch(e){setMessage("브라우저 저장공간에 접근할 수 없습니다.");}
+    renderStations();selectStation(currentIndex,false);
+    $("stationForm").reset();$("stationDialog").close();
+    setMessage("새 채널을 저장했습니다. 재생 버튼을 눌러주세요.");
+  });
+  $("removeStation").addEventListener("click",()=>{
+    if(currentIndex<DEFAULT_STATIONS.length){setMessage("기본 제공 채널은 삭제할 수 없습니다.");return;}
+    const removed=stations.splice(currentIndex,1)[0];
+    currentIndex=Math.min(currentIndex,stations.length-1);
+    persistCustom();selectStation(Math.max(0,currentIndex),false);
+    setMessage(`'${removed.name}' 채널을 삭제했습니다.`);
+  });
+
+  // Media Session: 잠금 화면/이어폰의 재생 버튼 지원(브라우저 지원 시)
+  if("mediaSession" in navigator){
+    try {
+      navigator.mediaSession.metadata=new MediaMetadata({title:"제이슨 라디오",artist:"Jason Radio",album:"인터넷 실시간 라디오"});
+      navigator.mediaSession.setActionHandler("play",play);
+      navigator.mediaSession.setActionHandler("pause",pause);
+      navigator.mediaSession.setActionHandler("stop",stop);
+      navigator.mediaSession.setActionHandler("previoustrack",()=>selectStation(currentIndex-1,true));
+      navigator.mediaSession.setActionHandler("nexttrack",()=>selectStation(currentIndex+1,true));
+    } catch(e) { console.info("Media Session 일부 기능 미지원"); }
+  }
+
+  window.addEventListener("beforeinstallprompt",event=>{
+    event.preventDefault();deferredInstall=event;$("installBtn").classList.add("visible");
+  });
+  $("installBtn").addEventListener("click",async()=>{
+    if(!deferredInstall){setMessage("브라우저 메뉴에서 '앱 설치' 또는 '홈 화면에 추가'를 선택해 주세요.");return;}
+    deferredInstall.prompt();
+    await deferredInstall.userChoice;
+    deferredInstall=null;$("installBtn").classList.remove("visible");
+  });
+  window.addEventListener("appinstalled",()=>setMessage("제이슨 라디오 앱이 설치되었습니다."));
+
+  renderStations();
+  selectStation(0,false);
+  if("serviceWorker" in navigator && (location.protocol==="https:" || location.hostname==="localhost")){
+    window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(err=>console.warn("서비스 워커 등록 실패:",err)));
+  }
+})();
+</script>
+</body>
+</html>
